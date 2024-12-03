@@ -6,13 +6,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
+//after2
 public class LoginApp extends JFrame {
     private JTextField emailField;
     private JPasswordField passwordField;
     private static final String DB_URL = "jdbc:mysql://localhost:3306/softwaretesting";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "usman123";
+    private static final String DB_PASSWORD = "12345678";
 
     public LoginApp() {
         setTitle("Login Screen");
@@ -45,7 +45,7 @@ public class LoginApp extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             String email = emailField.getText();
-            String password = new String(passwordField.getPassword()); // Get the password entered by the user
+            String password = new String(passwordField.getPassword()); // Retrieve password entered by user
 
             String userName = authenticateUser(email, password); // Pass both email and password for validation
             if (userName != null) {
@@ -59,14 +59,15 @@ public class LoginApp extends JFrame {
     private String authenticateUser(String email, String password) {
         String userName = null;
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            // Update SQL query to include password check
             String query = "SELECT name FROM User WHERE Email = ? AND Password = ?";
             PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setString(1, email);       // Set email parameter
-            stmt.setString(2, password);    // Set password parameter
+            stmt.setString(1, email);    // Set the email parameter
+            stmt.setString(2, password); // Set the password parameter
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                userName = rs.getString("Name");  // If both email and password match, retrieve the name
+                userName = rs.getString("Name");
             }
             rs.close();
             stmt.close();
