@@ -1,40 +1,68 @@
-name: Java CI using Maven
+name: CI/CD Pipeline for LoginApp
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  build:
-    name: Build and Test Project
+  build-and-test:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: usman123
+          MYSQL_DATABASE: softwaretesting
+          MYSQL_USER: root
+          MYSQL_PASSWORD: usman123
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up JDK (Java Development Kit)
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Step 3: Install Maven (Java build tool)
-      - name: Install Maven
-        run: |
-          sudo apt-get update  # Update package list
-          sudo apt-get install -y maven  # Install Maven package
+      - name: Set up Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
 
-      # Step 4: Install Xvfb for virtual display and set the DISPLAY environment variable
-      - name: Install Xvfb and set DISPLAY variable
+      - name: Wait for MySQL to be ready
         run: |
-          sudo apt-get install -y xvfb  # Install Xvfb package
-          export DISPLAY=:99  # Set the DISPLAY environment variable to virtual display 99
-          Xvfb :99 -screen 0 1024x768x24 &  # Start Xvfb with screen 0 and resolution 1024x768, 24-bit color depth
-          echo "DISPLAY=:99" >> $GITHUB_ENV  # Export DISPLAY globally to the environment variable
+          while ! mysqladmin ping -h"127.0.0.1" --silent; do
+            echo "Waiting for database connection..."
+            sleep 5
+          done
 
-      # Step 5: Run Maven Build and Tests
-      - name: Run Maven Build and Tests
-        run: mvn clean test
+      - name: Create Database Schema
+        run: |
+          mysql -u root -pusman123 -h 127.0.0.1 softwaretesting -e "
+          CREATE TABLE IF NOT EXISTS User (
+            Name VARCHAR(50),
+            Email VARCHAR(100) PRIMARY KEY,
+            Password VARCHAR(100)
+          ); 
+          INSERT INTO User (Name, Email, Password) VALUES ('John Doe', 'johndoe@example.com', 'password123');"
+
+      - name: Build with Maven
+        run: mvn clean compile
+
+      - name: Run Tests with Maven
+        run: mvn test
