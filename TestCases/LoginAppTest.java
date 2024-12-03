@@ -47,7 +47,7 @@ public class LoginAppTest {
     public void testAuthenticateUser_InvalidEmail() throws Exception {
         LoginApp app = new LoginApp();
 
-        // Use Reflection to access the private method
+        
         Method method = LoginApp.class.getDeclaredMethod("authenticateUser", String.class, String.class);
         method.setAccessible(true);
 
